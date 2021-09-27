@@ -194,6 +194,7 @@ class Response
                 }
 
                 $currentURL = Utils::getSelfRoutedURLNoQuery();
+                $strippedCurrentURL = preg_replace('#^https?://#', '', rtrim($currentURL,'/'));
 
                 $responseInResponseTo = null;
                 if ($this->document->documentElement->hasAttribute('InResponseTo')) {
@@ -279,18 +280,14 @@ class Response
                         }
                     } else {
                         $strippedDestination = preg_replace('#^https?://#', '', rtrim($destination,'/'));
-                        $strippedcurrentURL = preg_replace('#^https?://#', '', rtrim($currentURL,'/'));
-                        error_log('$destination = ' . $destination . ', $strippedDestination = ' . $strippedDestination);
-                        error_log('$currentURL = ' . $currentURL . ', $strippedcurrentURL = ' . $strippedcurrentURL);
-
-                        $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($strippedDestination) : strlen($strippedcurrentURL);
-                        if (strncmp($strippedDestination, $strippedcurrentURL, $urlComparisonLength) !== 0) {
+                        $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($strippedDestination) : strlen($strippedCurrentURL);
+                        if (strncmp($strippedDestination, $strippedCurrentURL, $urlComparisonLength) !== 0) {
                             $currentURLNoRouted = Utils::getSelfURLNoQuery();
                             $strippedCurrentURLNoRouted = preg_replace('#^https?://#', '', rtrim($currentURLNoRouted,'/'));
                             $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($strippedDestination) : strlen($strippedCurrentURLNoRouted);
                             if (strncmp($strippedDestination, $strippedCurrentURLNoRouted, $urlComparisonLength) !== 0) {
                                 throw new ValidationError(
-                                    "The response was received at $strippedcurrentURL instead of $strippedDestination",
+                                    "The response was received at $strippedCurrentURL instead of $strippedDestination",
                                     ValidationError::WRONG_DESTINATION
                                 );
                             }
@@ -352,7 +349,8 @@ class Response
                         }
                         if ($scnData->hasAttribute('Recipient')) {
                             $recipient = $scnData->getAttribute('Recipient');
-                            if (!empty($recipient) && strpos($recipient, $currentURL) === false) {
+                            $strippedRecipient = preg_replace('#^https?://#', '', rtrim($recipient,'/'));
+                            if (!empty($strippedRecipient) && strpos($strippedRecipient, $strippedCurrentURL) === false) {
                                 continue;
                             }
                         }
