@@ -278,13 +278,19 @@ class Response
                             );
                         }
                     } else {
-                        $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($destination) : strlen($currentURL);
-                        if (strncmp($destination, $currentURL, $urlComparisonLength) !== 0) {
+                        $strippedDestination = preg_replace('#^https?://#', '', rtrim($destination,'/'));
+                        $strippedcurrentURL = preg_replace('#^https?://#', '', rtrim($currentURL,'/'));
+                        error_log('$destination = ' . $destination . ', $strippedDestination = ' . $strippedDestination);
+                        error_log('$currentURL = ' . $currentURL . ', $strippedcurrentURL = ' . $strippedcurrentURL);
+
+                        $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($strippedDestination) : strlen($strippedcurrentURL);
+                        if (strncmp($strippedDestination, $strippedcurrentURL, $urlComparisonLength) !== 0) {
                             $currentURLNoRouted = Utils::getSelfURLNoQuery();
-                            $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($destination) : strlen($currentURLNoRouted);
-                            if (strncmp($destination, $currentURLNoRouted, $urlComparisonLength) !== 0) {
+                            $strippedCurrentURLNoRouted = preg_replace('#^https?://#', '', rtrim($currentURLNoRouted,'/'));
+                            $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($strippedDestination) : strlen($strippedCurrentURLNoRouted);
+                            if (strncmp($strippedDestination, $strippedCurrentURLNoRouted, $urlComparisonLength) !== 0) {
                                 throw new ValidationError(
-                                    "The response was received at $currentURL instead of $destination",
+                                    "The response was received at $strippedcurrentURL instead of $strippedDestination",
                                     ValidationError::WRONG_DESTINATION
                                 );
                             }
